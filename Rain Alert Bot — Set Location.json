@@ -1,0 +1,604 @@
+{
+  "name": "Rain Alert Bot — Set Location",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "e10c7e9c-bd4b-4f41-aa53-63e7d1c86e94",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -496,
+        256
+      ],
+      "webhookId": "575e2e4f-98db-4daa-8a58-ee6409ddb5f1",
+      "credentials": {
+        "telegramApi": {
+          "id": "WHxIz0PzcWDVdBsb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "is-changelocation",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/changelocation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "changelocation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "is-start",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "is-hi",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "hi",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "is-hello",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "hello",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "is-hey",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "hey",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "start or greeting"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "ignoreCase": true,
+          "renameFallbackOutput": "location answer"
+        }
+      },
+      "id": "c12c7ebe-171b-411e-be7e-9e6aac58ff45",
+      "name": "Route Message",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -272,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "=📍 Sure! Send me your new location in this format:\n\nCity, State, Country\n\nFor example: Sambalpur, Odisha, India",
+        "additionalFields": {}
+      },
+      "id": "3e445284-d263-4808-82ac-e7fbf408b4bf",
+      "name": "Ask New Location",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        256
+      ],
+      "webhookId": "77a8493d-3a91-4a66-a5c4-4d9db1710c58",
+      "credentials": {
+        "telegramApi": {
+          "id": "WHxIz0PzcWDVdBsb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "=👋 Welcome to the Rain Alert bot! I'll message you every morning at 7:10 AM when rain is expected at your place.\n\n📍 To get started, send me your location in this format:\n\nCity, State, Country\n\nFor example: Sambalpur, Odisha, India",
+        "additionalFields": {}
+      },
+      "id": "c9a6ae93-d84b-4d3c-b9c0-1f0deca99dca",
+      "name": "Ask Location Welcome",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        448
+      ],
+      "webhookId": "6efc9ee9-e452-46f3-a748-8b4663d60b26",
+      "credentials": {
+        "telegramApi": {
+          "id": "WHxIz0PzcWDVdBsb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const msg = $json.message || {};\nconst text = (msg.text || '').trim();\nconst parts = text.split(',').map(p => p.trim()).filter(p => p.length > 0);\nconst formatOk = parts.length >= 2 && parts.length <= 3;\n// OpenWeatherMap resolves \"City, Country\" reliably but not \"City, State, Country\",\n// so validate with city + last part (country) while keeping the full text for replies.\nconst lookupQuery = parts.length === 3 ? parts[0] + ', ' + parts[2] : parts.join(', ');\nreturn { json: { chat_id: msg.chat.id, locationQuery: parts.join(', '), lookupQuery, formatOk } };"
+      },
+      "id": "ce719ef4-43ff-45c3-886e-67c4358fa7b8",
+      "name": "Check Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "format-ok",
+              "leftValue": "={{ $json.formatOk }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ec5e5782-c79c-4dfc-8ad4-762f01fcd33d",
+      "name": "If Format Ok",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "cityName": "={{ $json.lookupQuery }}",
+        "language": "en"
+      },
+      "id": "88073bc3-6156-41cd-9e73-c74748416df9",
+      "name": "Validate Location",
+      "type": "n8n-nodes-base.openWeatherMap",
+      "typeVersion": 1,
+      "position": [
+        464,
+        288
+      ],
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "riBzBcii7ApSnVsp",
+          "name": "OpenWeatherMap account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "valid-location",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9db9f197-240d-48d1-89cb-5fb2b4e20a1b",
+      "name": "If Valid Location",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        688,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1TJ-FG-o4BmXC8zzVxUSiOXSm4jJasUtXcUsCJmQDMt8",
+          "mode": "list",
+          "cachedResultName": "demo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TJ-FG-o4BmXC8zzVxUSiOXSm4jJasUtXcUsCJmQDMt8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "first_name": "={{ $('Telegram Trigger').item.json.message.from.first_name }}",
+            "username": "={{ $('Telegram Trigger').item.json.message.from.username }}",
+            "location": "={{ $json.name }}",
+            "subscribed_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "first_name",
+              "displayName": "first_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "username",
+              "displayName": "username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subscribed_at",
+              "displayName": "subscribed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e84360c8-fbb0-4b76-86c8-04261538b657",
+      "name": "Save Subscription",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        912,
+        416
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xuqlJpg8a9PU5L1k",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=✅ Done! Your location is set to {{ $('Validate Location').item.json.name }}. You'll get a rain alert every morning at 7:10 AM.\n\nSend /changelocation any time to switch to a different place.",
+        "additionalFields": {}
+      },
+      "id": "c1952629-424c-4c64-baa6-ac3af8126421",
+      "name": "Confirm Subscription",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        416
+      ],
+      "webhookId": "637a106e-b3a6-4bc3-a418-698135754065",
+      "credentials": {
+        "telegramApi": {
+          "id": "WHxIz0PzcWDVdBsb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=❓ Sorry, I couldn't find a place called \"{{ $('Check Format').item.json.locationQuery }}\". Please check the spelling and send it again in this format:\n\nCity, State, Country",
+        "additionalFields": {}
+      },
+      "id": "ddca5333-a00f-48b0-b675-3f3087b1d684",
+      "name": "Reply Unknown Place",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        192
+      ],
+      "webhookId": "a7a0b568-cad4-427f-91d1-3a6845301e15",
+      "credentials": {
+        "telegramApi": {
+          "id": "WHxIz0PzcWDVdBsb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=⚠️ Please send your location in this format:\n\nCity, State, Country\n\nFor example: Sambalpur, Odisha, India",
+        "additionalFields": {}
+      },
+      "id": "f99a072d-8262-4c9f-88ca-12730178ef8c",
+      "name": "Reply Wrong Format",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        480
+      ],
+      "webhookId": "19ec2fc6-d0b4-44e3-a1d0-326962a046ba",
+      "credentials": {
+        "telegramApi": {
+          "id": "WHxIz0PzcWDVdBsb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "89703e71-202a-4f7c-a0fe-9495bac2cd47",
+      "name": "Merge Prompts",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        480,
+        352
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Route Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Message": {
+      "main": [
+        [
+          {
+            "node": "Ask New Location",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ask Location Welcome",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask New Location": {
+      "main": [
+        [
+          {
+            "node": "Merge Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Location Welcome": {
+      "main": [
+        [
+          {
+            "node": "Merge Prompts",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Check Format": {
+      "main": [
+        [
+          {
+            "node": "If Format Ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Format Ok": {
+      "main": [
+        [
+          {
+            "node": "Validate Location",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply Wrong Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Location": {
+      "main": [
+        [
+          {
+            "node": "If Valid Location",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply Unknown Place",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Valid Location": {
+      "main": [
+        [
+          {
+            "node": "Save Subscription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply Unknown Place",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Subscription": {
+      "main": [
+        [
+          {
+            "node": "Confirm Subscription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "88f2c6f5-9d42-42e0-ac9d-9262492d8a2d",
+  "meta": {
+    "instanceId": "daa14da4bb7af9e4e9c7222ee32cdd448c59d39143722c21f6e101960c4df281"
+  },
+  "nodeGroups": [
+    {
+      "id": "23915a37-6863-4a6b-a4fb-deadc0265295",
+      "name": "Validate and save place",
+      "nodeIds": [
+        "ce719ef4-43ff-45c3-886e-67c4358fa7b8",
+        "ec5e5782-c79c-4dfc-8ad4-762f01fcd33d",
+        "88073bc3-6156-41cd-9e73-c74748416df9",
+        "9db9f197-240d-48d1-89cb-5fb2b4e20a1b",
+        "e84360c8-fbb0-4b76-86c8-04261538b657",
+        "c1952629-424c-4c64-baa6-ac3af8126421",
+        "ddca5333-a00f-48b0-b675-3f3087b1d684",
+        "f99a072d-8262-4c9f-88ca-12730178ef8c"
+      ],
+      "description": "Checks the format of the user answer, verifies the place exists, saves it to their subscription and confirms."
+    }
+  ],
+  "id": "pBwYpTqdZnn2iBAz",
+  "tags": []
+}

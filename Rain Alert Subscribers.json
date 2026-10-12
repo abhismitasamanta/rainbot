@@ -1,0 +1,124 @@
+{
+  "name": "Rain Alert Subscribers",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "4d1096ba-a58d-4e44-b8a3-a4610fdb3258",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "e51b5d30-d879-4960-9f90-484bb2f0affd",
+      "credentials": {
+        "telegramApi": {
+          "id": "WHxIz0PzcWDVdBsb",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "A2EjOv0I6pclCDUf"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{ $json.message.chat.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $json.message.chat.id }}",
+            "first_name": "={{ $json.message.chat.first_name }}",
+            "username": "={{ $json.message.chat.username }}",
+            "subscribed_at": "={{ new Date().toISOString() }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "ef27b25d-13c6-4dcf-94d8-c7db731b267f",
+      "name": "Save Subscriber",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Telegram Trigger\").item.json.message.chat.id }}",
+        "text": "You're subscribed to daily rain alerts for Sambalpur! You'll get a message every morning at 7:10 with the weather.",
+        "additionalFields": {}
+      },
+      "id": "4893bb9f-0ba0-4578-ad8c-a4ea07162c07",
+      "name": "Confirm Subscription",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        0
+      ],
+      "webhookId": "6139ac60-d89c-4694-8143-b728cf0847c0",
+      "credentials": {
+        "telegramApi": {
+          "id": "WHxIz0PzcWDVdBsb",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Save Subscriber",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Subscriber": {
+      "main": [
+        [
+          {
+            "node": "Confirm Subscription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3dbfb6da-d3fe-412a-a523-64174069c654",
+  "meta": {
+    "instanceId": "daa14da4bb7af9e4e9c7222ee32cdd448c59d39143722c21f6e101960c4df281"
+  },
+  "nodeGroups": [],
+  "id": "vPhWg6QGYZphfpZf",
+  "tags": []
+}
